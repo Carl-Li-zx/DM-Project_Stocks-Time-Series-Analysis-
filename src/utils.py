@@ -9,6 +9,7 @@ matplotlib.use('Agg')
 
 from src.config import Config
 from src.dataset import Data
+from src.dataset import TestDataset
 
 
 def load_logger(config):
@@ -31,6 +32,21 @@ def load_logger(config):
     logger.info(config_save_str)
 
     return logger
+
+
+def draw(config: Config, result: np.ndarray, test_dataset: np.ndarray, feature_index):
+    ground_truth = test_dataset[:, feature_index]
+    predict = predict_upper = predict_lower = ground_truth[0:config.seq_len]
+    result = result[:, :, feature_index]
+    result1 = np.append(result[:, 0], 0.)
+    result2 = np.append(0., result[:, 1])
+    max_r = np.max([result1, result2], axis=0)
+    min_r = np.min([result1, result2], axis=0)
+    avg = (max_r + min_r) / 2
+    predict = np.concatenate((predict, avg), axis=0)
+    predict_lower = np.concatenate((predict_lower, min_r), axis=0)
+    predict_upper = np.concatenate((predict_upper, max_r), axis=0)
+
 
 
 def draw(config: Config, origin_data: Data, logger, predict_norm_data: np.ndarray):
@@ -81,11 +97,11 @@ class EarlyStopping:
         self.val_loss_min = np.Inf
         self.delta = delta
 
-    def __call__(self, val_loss, model, path, logger):
+    def __call__(self, val_loss, model, path, logger, model_name):
         score = -val_loss
         if self.best_score is None:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, path, logger)
+            self.save_checkpoint(val_loss, model, path, logger, model_name)
         elif score < self.best_score + self.delta:
             self.counter += 1
             print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
@@ -93,11 +109,11 @@ class EarlyStopping:
                 self.early_stop = True
         else:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, path, logger)
+            self.save_checkpoint(val_loss, model, path, logger, model_name)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model, path, logger):
+    def save_checkpoint(self, val_loss, model, path, logger, model_name):
         if self.verbose:
             logger.info(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), path + 'checkpoint.pth')
+        torch.save(model.state_dict(), path + model_name)
         self.val_loss_min = val_loss

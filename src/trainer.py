@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler, Adam
 from torch.nn import MSELoss
 
-from .dataset import StockDataset
+from .dataset import StockDataset, TestDataset
 from .model.ns_transformer import NSTransformer
 from .utils import *
 
@@ -80,7 +80,7 @@ def train(config: Config, logger):
 
         logger.info("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f}".format(
             epoch + 1, train_steps, train_loss, vali_loss))
-        early_stopping(vali_loss, model, path, logger)
+        early_stopping(vali_loss, model, path, logger, config.model_name)
         if early_stopping.early_stop:
             logger.info("Early stopping")
             break
@@ -122,8 +122,9 @@ def vali(model, vali_loader, criterion, config):
     return total_loss
 
 
-def predict(config, test_dataset):
-    test_loader = DataLoader(test_dataset, batch_size=1)
+def predict(config):
+    test_dataset = TestDataset(Config)
+    test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
 
     device = torch.device("cuda:0" if config.use_cuda and torch.cuda.is_available() else "cpu")
     model = NSTransformer(config).to(device)
@@ -133,7 +134,6 @@ def predict(config, test_dataset):
     label = torch.Tensor().to(device)
 
     model.eval()
-    hidden_predict = None
     for i, (batch_x, batch_y) in enumerate(test_loader):
         batch_x = batch_x.float().to(device)
         batch_y = batch_y.float()
@@ -149,9 +149,9 @@ def predict(config, test_dataset):
         outputs = outputs[:, -config.pred_len:, :]
         batch_y = batch_y[:, -config.pred_len:, :].to(device)
 
-        pred = outputs.detach().cpu()
-        true = batch_y.detach().cpu()
+        pred = outputs.detach()
+        true = batch_y.detach()
         result = torch.cat((result, pred), dim=0)
         label = torch.cat((label, true), dim=0)
 
-    return result.detach().cpu().numpy(), label.detach.cpu().numpy()
+    return result.cpu().numpy(), label.cpu().numpy(), test_dataset.data_provider.data

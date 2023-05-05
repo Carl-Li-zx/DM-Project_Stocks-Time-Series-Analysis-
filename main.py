@@ -12,13 +12,6 @@ def main(config: Config):
 
         if config.do_train:
             train(config, logger)
-
-        """
-        if config.do_predict:
-            test_X, test_Y = data_gainer.get_test_data(return_label_data=True)
-            pred_result = predict(config, test_X)  # 这里输出的是未还原的归一化预测数据
-            draw(config, data_gainer, logger, pred_result)
-        """
     except Exception:
         logger.error("Run Error", exc_info=True)
 
