@@ -3,7 +3,7 @@ import sys
 #from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap
-from BackTest import backtest
+from stock_prediction_and_backtesting_system.BackTest import backtest
 from Prediction import A_prediction
 import matplotlib.pyplot as plt
 import pandas as pd

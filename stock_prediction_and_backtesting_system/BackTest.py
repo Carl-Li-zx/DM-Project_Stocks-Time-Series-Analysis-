@@ -9,7 +9,7 @@ plt.style.use('fivethirtyeight')
 from pylab import rcParams
 
 rcParams['figure.figsize'] = 10, 6
-from .Prediction import A_prediction
+from stock_prediction_and_backtesting_system.Prediction import A_prediction
 import numpy as np
 
 import pandas as pd
