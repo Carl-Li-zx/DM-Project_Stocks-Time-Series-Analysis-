@@ -40,8 +40,36 @@
 
         <button type="submit" disabled>Predict</button>
       </form>
+
+
     <div id="candlestick" style="width: 100%;height:600px;margin: 0 auto;"></div>
     <div id="predict" style="width: 100%;height:600px;margin: 0 auto;"></div>
+
+    <form id="backtest-stock-code-form">
+        <label for="backtest-stock-codes">Backtest Stock Codes:</label>
+        <select id="backtest-stock-codes" name="backtest-stock-codes" multiple size="10">
+        <!-- Options will be dynamically added here -->
+        </select>
+
+        <label for="backtest-training-start-date">Backtest Training Start Date:</label>
+        <input id="backtest-training-start-date" name="backtest-training-start-date" type="date">
+
+        <label for="backtest-test-start-date">Backtest Test Start Date:</label>
+        <input id="backtest-test-start-date" name="backtest-test-start-date" type="date">
+
+        <label for="backtest-test-end-date">Backtest Test End Date:</label>
+        <input id="backtest-test-end-date" name="backtest-test-end-date" type="date">
+
+        <label for="num">每日持仓股票数:</label>
+        <input id="num" name="num" type="text">
+
+        <label for="costrate">交易手续费率:</label>
+        <input id="costrate" name="costrate" type="text">
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="backtest" style="width: 100%;height:600px;margin: 0 auto;"></div>
 </div>
 
   <!-- Uncomment this line if you want to dataTool extension
@@ -72,8 +100,13 @@
       renderer: 'canvas',
       useDirtyRect: false
     });
+    var backtestChart = echarts.init(document.getElementById('backtest'), null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
     var candlestickOption;
     var predictOption;
+    var backtestOption;
 
     const upColor = '#ec0000';
     const downColor = '#00da3c';
@@ -416,6 +449,88 @@ document.getElementById('stock-code-form').addEventListener('submit', function(e
             predictChart.setOption(predictOption);
         });
     });
+    window.addEventListener('DOMContentLoaded', (event) => {
+    fetch('/api/backtest_stock_code')
+        .then(response => response.json())
+        .then(data => {
+            var select = document.getElementById('backtest-stock-codes');
+            data.forEach(stockCode => {
+                var opt = document.createElement('option');
+                opt.value = stockCode;
+                opt.innerHTML = stockCode;
+                select.appendChild(opt);
+            });
+        });
+    });
+
+    document.getElementById('backtest-stock-code-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var selectedOptions = Array.from(document.getElementById('backtest-stock-codes').selectedOptions).map(option => option.value);
+        var trainingStartDate = document.getElementById('backtest-training-start-date').value;
+        var testStartDate = document.getElementById('backtest-test-start-date').value;
+        var testEndDate = document.getElementById('backtest-test-end-date').value;
+        var num = document.getElementById('num').value;
+        var costrate = document.getElementById('costrate').value;
+        var data = { 'backtest-stock-codes': selectedOptions, 'training-start-date':trainingStartDate,
+            'test-start-date':testStartDate,'test-end-date':testEndDate,'num':num,'costrate':costrate};
+        fetch('/api/backtest_stock_code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            backtestOption = {
+                        title: {
+                            text: 'backtest',
+                            left: 'center'
+                        },
+                        tooltip: {
+                    trigger: 'axis'
+                  },
+                  legend: {
+                            bottom: 0,
+                            left: 'center',
+                            data: ['backtest']
+                  },
+                  grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                  },
+                  toolbox: {
+                    feature: {
+                      saveAsImage: {}
+                    }
+                  },
+                  xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: data.x
+                  },
+                  yAxis: {
+                            scale: true,
+                      splitArea: {
+                                show: true
+                            }
+                  },
+                  series: [
+                      {
+                          name: 'Truth',
+                          type: 'line',
+                          data: data.y
+                      },
+                  ]
+
+            };
+            backtestChart.setOption(backtestOption);
+        });
+    });
+
 </script>
 </body>
 </html>

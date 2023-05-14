@@ -42,7 +42,6 @@ class Config:
 
     train_data_path = "dataset/"
     model_save_path = "checkpoint/"
-    figure_save_path = "figure/"
     log_save_path = "log/"
     do_log_print_to_screen = True
     do_log_save_to_file = True
@@ -50,8 +49,6 @@ class Config:
     do_train_visualized = False
     if not os.path.exists(model_save_path):
         os.makedirs(model_save_path)
-    if not os.path.exists(figure_save_path):
-        os.mkdir(figure_save_path)
     if do_train and (do_log_save_to_file or do_train_visualized):
         cur_time = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
         if not os.path.exists(log_save_path):
