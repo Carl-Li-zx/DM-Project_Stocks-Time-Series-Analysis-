@@ -53,17 +53,14 @@
 
     python app.py
 
-得到初始化的页面
-![web](./figures/web.png)
-
-## 数据可视化
 输入股票代码以及预测的项目(高开低收)以及训练、测试日期等信息后，可以得到绘制的k线图
+
 ![web candlestick](./figures/web candlestick%20chart.png)
+
 注意，股票代码的候选集可以在 data_api/constant.py 里找到，使用万得API的候选集为CODE_LIST；使用New York Stock Exchange数据集的候选集为 NEW_YORK_STOCK_CODE
 
-## 预测
 在完成数据可视化步骤，选择模型(ARIMA, Nonstationary Transformers)后可以对预测的项目进行预测
+
 ![web predict](./figures/web predict.png)
 
-## 回测
 回测需要基于Wind API完成，在选择多个候选股票代码以及输入有关信息后，可以获得回测盈利率的图像。
